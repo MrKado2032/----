@@ -323,6 +323,11 @@ class Score{
         this.#onChanged = onChanged;
     }
 
+    reset(){
+        this.#value = 0;
+        if(this.#onChanged) this.#onChanged(this.#value);
+    }
+
     addValue(value){
         this.#value += value;
         if(this.#onChanged) this.#onChanged(this.#value);
@@ -630,6 +635,7 @@ class GameManager{
         this.#fieldManager.reset();
         this.#dropCount = 0;
         this.#lastTime = 0;
+        this.#currentScore.reset();
 
         this.#spawnMino();
 
