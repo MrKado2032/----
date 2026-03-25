@@ -284,6 +284,7 @@ class Tetorimino{
     }
     
     setMinoData(minoData){
+        if(!minoData) return;
         this.#minoData = minoData.shape;
         this.#color = minoData.color;
     }
@@ -384,6 +385,8 @@ class UIManager{
         this.#holdContext.fillStyle = "white";
         this.#holdContext.font = "20px Arial";
         this.#holdContext.fillText("HOLD (H Key)", 10, 30);
+
+        if(minoData === null) return;
 
         for(let i = 0; i < minoData.shape.length; i++){
             for(let j = 0; j < minoData.shape[i].length; j++){
@@ -553,8 +556,6 @@ class GameManager{
         this.#fieldManager = new FieldManager();
         this.#minoSpawner = new MinoSpawner();
 
-        this.#holdMino = MINO_SHAPE_DATAS[Math.floor(Math.random() * MINO_SHAPE_DATAS.length)];
-
         this.#currentScore = new Score(0, value => {
             this.#updateLevelFromScore();
             this.#uiManager.setScoreText(value);
@@ -576,8 +577,21 @@ class GameManager{
                 this.#rotateMino();
             }
             else if((e.key === "h" || e.key === "H") && !this.#isHoldUsed){ // Hキー (ホールド)
-                this.#activeMino.setMinoData(this.#holdMino);
-                this.#holdMino = MINO_SHAPE_DATAS[Math.floor(Math.random() * MINO_SHAPE_DATAS.length)];
+
+                const currentData = {
+                    shape: this.#activeMino.getMinoData(),
+                    color: this.#activeMino.getColor()
+                };
+
+                if(this.#holdMino === null){
+                    this.#holdMino = currentData;
+                    this.#spawnMino();
+                }
+                else{
+                    const temp = this.#holdMino;
+                    this.#holdMino = currentData;
+                    this.#spawnMino(new Tetorimino(temp.shape, temp.color));
+                }
                 this.#isHoldUsed = true;
             }
         });
@@ -673,9 +687,9 @@ class GameManager{
     }
 
     // ミノをスポーン
-    #spawnMino(){
+    #spawnMino(mino){
 
-        this.#activeMino = this.#minoSpawner.getNextMino();
+        this.#activeMino = mino === undefined ? this.#minoSpawner.getNextMino() : mino;
         this.#isHoldUsed = false;
 
         if(!this.#fieldManager.canMove(this.#activeMino.getCurrentPosX(), this.#activeMino.getCurrentPosY(), this.#activeMino.getMinoData())){
@@ -719,7 +733,6 @@ class GameManager{
 
         this.#uiManager.setNextContainerFromMinoContainer(this.#minoSpawner.getNextNextMino());
         this.#uiManager.setHoldMino(this.#holdMino);
-
     }
 
     // 描画処理
